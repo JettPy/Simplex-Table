@@ -1,0 +1,3 @@
+"C:\Program Files\JetBrains\CLion 2020.2.4\bin\cmake\win\bin\cmake.exe" -E rm -f CMakeFiles\simplex_table.dir/objects.a
+C:\MinGW\mingw64\bin\ar.exe cr CMakeFiles\simplex_table.dir/objects.a @CMakeFiles\simplex_table.dir\objects1.rsp
+C:\MinGW\mingw64\bin\g++.exe -g   -Wl,--whole-archive CMakeFiles\simplex_table.dir/objects.a -Wl,--no-whole-archive  -o simplex_table.exe -Wl,--out-implib,libsimplex_table.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\simplex_table.dir\linklibs.rsp

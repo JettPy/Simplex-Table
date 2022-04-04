@@ -1,13 +1,14 @@
 #include "SimplexTable.h"
 #include <iostream>
 #include <iomanip>
-#include "Fraction.h"
+#include "../Fraction/Fraction.h"
 
 SimplexTable::SimplexTable(int **coefficients, const char* signs, int *objective_function, int variables_count, int equations_count, bool is_maximize) {
     this->rows = 1 + equations_count + 2;
     this->columns = 1 + variables_count;
     this->is_maximize = is_maximize;
     this->is_first_stage = true;
+    this->solution_possible = true;
     for (int i = 0; i < equations_count; ++i) {
         if (signs[i] == '=' || signs[i] == '<') {
             this->columns += 1;
@@ -98,13 +99,13 @@ void SimplexTable::print_table() {
 }
 
 int SimplexTable::find_column() {
-    double value = 0;
+    Fraction value(0, 1);
     int index = -1;
     for (int i = 1; i < this->columns - 1; ++i) {
         Fraction fraction(this->table[this->rows - 1][i]);
-        if (fraction.to_double() < value && (this->is_first_stage || this->is_maximize) ||
-            fraction.to_double() > value && !this->is_first_stage && !this->is_maximize) {
-            value = fraction.to_double();
+        if (fraction < value && (this->is_first_stage || this->is_maximize) ||
+            fraction > value && !this->is_first_stage && !this->is_maximize) {
+            value = fraction;
             index = i;
         }
     }
@@ -112,13 +113,13 @@ int SimplexTable::find_column() {
 }
 
 int SimplexTable::find_row(int column) {
-    double value = -1;
+    Fraction value(-1, 1);
     int index = -1;
     for (int i = 1; i < this->rows - 1 - (int)this->is_first_stage; ++i) {
         Fraction b(this->table[i][columns - 1]);
         Fraction a(this->table[i][column]);
-        if (b.to_double() >= 0 && a.to_double() > 0 && (b.to_double() / a.to_double() < value || value < 0)) {
-            value = b.to_double() / a.to_double();
+        if ((b >= 0 && a > 0 || b <= 0 && a < 0) && (b / a < value || value < 0)) {
+            value = b / a;
             index = i;
         }
     }
@@ -187,12 +188,12 @@ void SimplexTable::recalculate(int row, int column) {
 void SimplexTable::iterate() {
     int element_column = this->find_column();
     if (element_column == -1) {
-        this->answer_size = -1;
+        this->solution_possible = false;
         return;
     }
     int element_row = this->find_row(element_column);
     if (element_row == -1) {
-        this->answer_size = -1;
+        this->solution_possible = false;
         return;
     }
     std::cout << "Element: " + this->table[element_row][element_column] + " (" << element_row << ", " << element_column << ")" << std::endl;
@@ -200,21 +201,31 @@ void SimplexTable::iterate() {
 }
 
 bool SimplexTable::can_be_iterated() {
-    if (this->answer_size == -1) {
+    if (!this->solution_possible) {
         return false;
     }
+    bool is_end = false;
     for (int i = 1; i < this->columns - 1; ++i) {
         if (this->is_first_stage) {
-            if (Fraction(this->table[this->rows - 1][i]).to_double() < 0)
+            if (Fraction(this->table[this->rows - 1][i]) < 0) {
                 return true;
+            } else if (Fraction(this->table[this->rows - 1][i]) > 0) {
+                is_end = true;
+            }
         } else {
-            if (Fraction(this->table[this->rows - 1][i]).to_double() < 0 && this->is_maximize ||
-                Fraction(this->table[this->rows - 1][i]).to_double() > 0 && !this->is_maximize)
+            Fraction z(this->table[this->rows - 1][i]);
+            if (z < 0 && this->is_maximize || z > 0 && !this->is_maximize) {
                 return true;
+            } else if (z > 0 && this->is_maximize || z < 0 && !this->is_maximize) {
+                is_end = true;
+            }
         }
     }
-    if (this->is_first_stage && Fraction(this->table[this->rows - 1][this->columns - 1]).to_double() != 0) {
-        this->answer_size = -1;
+    if (this->is_first_stage && Fraction(this->table[this->rows - 1][this->columns - 1]) == 0) {
+        return false;
+    }
+    if (this->is_first_stage) {
+        this->solution_possible = !is_end;
     }
     return false;
 }
@@ -229,7 +240,7 @@ void SimplexTable::drop_artificial_objective_function() {
 }
 
 void SimplexTable::get_answer() {
-    if (this->answer_size == -1) {
+    if (!this->solution_possible) {
         std::cout << "No solution" << std::endl;
         return;
     }
@@ -262,5 +273,5 @@ void SimplexTable::get_answer() {
 }
 
 bool SimplexTable::is_solution_possible() const {
-    return this->answer_size != -1;
+    return this->solution_possible;
 }

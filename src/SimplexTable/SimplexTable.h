@@ -10,6 +10,7 @@ private:
     bool is_maximize;
     bool is_first_stage;
     int answer_size;
+    bool solution_possible;
 
     void deleteTable();
     int find_column();

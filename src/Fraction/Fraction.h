@@ -1,6 +1,5 @@
 #ifndef TABLES_FRACTION_H
 #define TABLES_FRACTION_H
-#include <string>
 
 
 class Fraction {
@@ -11,11 +10,9 @@ private:
     static int greatest_common_divisor(int a, int b);
 
 public:
+    Fraction();
     Fraction(int, int);
-    explicit Fraction(std::string);
     ~Fraction();
-    [[nodiscard]] double to_double() const;
-    [[nodiscard]] std::string to_string() const;
     friend Fraction operator + (const Fraction&, const Fraction&);
     friend Fraction operator - (const Fraction&, const Fraction&);
     friend Fraction operator * (const Fraction&, const Fraction&);
@@ -35,6 +32,7 @@ public:
     friend bool operator == (const Fraction&, const int&);
     friend bool operator >= (const Fraction&, const int&);
     friend bool operator <= (const Fraction&, const int&);
+    friend std::ostream& operator << (std::ostream&, Fraction&);
 };
 
 

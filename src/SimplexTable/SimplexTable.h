@@ -1,10 +1,14 @@
 #ifndef TABLES_SIMPLEXTABLE_H
 #define TABLES_SIMPLEXTABLE_H
 #include <string>
+#include "../Fraction/Fraction.h"
+
 
 class SimplexTable {
 private:
-    std::string **table;
+    Fraction **table;
+    std::string *columns_caption;
+    std::string *rows_caption;
     int rows;
     int columns;
     bool is_maximize;
@@ -12,7 +16,7 @@ private:
     int answer_size;
     bool solution_possible;
 
-    void deleteTable();
+    void deleteTable(bool);
     int find_column();
     int find_row(int);
     void recalculate(int, int);

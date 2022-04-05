@@ -2,6 +2,13 @@
 #include <vector>
 #include "SimplexTable/SimplexTable.h"
 
+const char *COUNT_ERROR = "Cannot enter a number less than one.";
+const char *LOW_SIZE_ERROR = "Too few arguments. Try again.";
+const char *HIGH_SIZE_ERROR = "Too many arguments. Try again.";
+const char *COEFFICIENT_ERROR = "Invalid enter, try again. Use numbers for coefficients.";
+const char *SIGN_ERROR = "Invalid enter, try again. Use one sign(=, >, <).";
+const char *CHOICE_ERROR = R"(Only "y" or "n" allowed.)";
+
 void get_integer(int& num) {
     std::string buffer;
     while (true) {
@@ -9,7 +16,7 @@ void get_integer(int& num) {
         std::getline(std::cin, buffer);
         try {
             if (stoi(buffer) < 1) {
-                std::cout << "Cannot enter a number less than one." << std::endl;
+                std::cout << COUNT_ERROR << std::endl;
             } else {
                 num = stoi(buffer);
                 break;
@@ -24,15 +31,14 @@ void parse_string(std::vector<std::string>& enter, const std::string& str) {
     std::string separator(" ");
     size_t prev = 0;
     size_t next;
-    size_t delta = separator.length();
     while((next = str.find(separator, prev)) != std::string::npos ){
-        enter.push_back(str.substr( prev, next-prev ) );
-        prev = next + delta;
+        enter.push_back(str.substr(prev, next-prev));
+        prev = next + separator.length();
     }
     enter.push_back(str.substr(prev));
 }
 
-void get_equation(int** coefficients, char* signs, int variables_count, int pos) {
+void get_equation(int **coefficients, char *signs, int variables_count, int pos) {
     std::string buffer;
     enter_line:
     std::cout << "Enter " << variables_count - 1 << " coefficients and equality sign for the equation " << pos + 1
@@ -41,56 +47,56 @@ void get_equation(int** coefficients, char* signs, int variables_count, int pos)
     std::vector<std::string> enter;
     parse_string(enter, buffer);
     if (enter.size() < variables_count + 1) {
-        std::cout << "Too few arguments. Try again." << std::endl;
+        std::cout << LOW_SIZE_ERROR << std::endl;
         goto enter_line;
     }
     if (enter.size() > variables_count + 1) {
-        std::cout << "Too many arguments. Try again." << std::endl;
+        std::cout << HIGH_SIZE_ERROR << std::endl;
         goto enter_line;
     }
     for (int i = 0; i < variables_count - 1; ++i) {
         try {
             coefficients[pos][i] = stoi(enter[i]);
         } catch (std::invalid_argument&) {
-            std::cout << "Invalid enter, try again. Use numbers for coefficients." << std::endl;
+            std::cout << COEFFICIENT_ERROR << std::endl;
             goto enter_line;
         }
     }
     if (enter[variables_count - 1] != ">" &&
         enter[variables_count - 1] != "<" &&
         enter[variables_count - 1] != "=") {
-        std::cout << "Invalid enter, try again. Use one sign(=, >, <)." << std::endl;
+        std::cout << SIGN_ERROR << std::endl;
         goto enter_line;
     }
     signs[pos] = enter[variables_count - 1][0];
     try {
         coefficients[pos][variables_count - 1] = stoi(enter[variables_count]);
     } catch (std::invalid_argument&) {
-        std::cout << "Invalid enter, try again. Use numbers for coefficients." << std::endl;
+        std::cout << COEFFICIENT_ERROR << std::endl;
         goto enter_line;
     }
 }
 
-void get_objective_function(int* objective_function, int variables_count) {
+void get_objective_function(int *objective_function, int variables_count) {
     std::string buffer;
     function:
-    std::cout << "Enter function coefficients and free term (x1+x2+b=0):" << std::endl;
+    std::cout << "Enter " << variables_count << " function coefficients and free term (x1+x2+b=0):" << std::endl;
     std::getline(std::cin, buffer);
     std::vector<std::string> enter;
     parse_string(enter, buffer);
     if (enter.size() < variables_count) {
-        std::cout << "Too few arguments. Try again." << std::endl;
+        std::cout << LOW_SIZE_ERROR << std::endl;
         goto function;
     }
     if (enter.size() > variables_count) {
-        std::cout << "Too many arguments. Try again." << std::endl;
+        std::cout << HIGH_SIZE_ERROR << std::endl;
         goto function;
     }
     for (int i = 0; i < variables_count; ++i) {
         try {
             objective_function[i] = stoi(enter[i]);
         } catch (std::invalid_argument&) {
-            std::cout << "Invalid enter, try again. Use numbers for coefficients." << std::endl;
+            std::cout << COEFFICIENT_ERROR << std::endl;
             goto function;
         }
     }
@@ -106,12 +112,12 @@ bool get_task() {
         } else if (choice == 'n') {
             return false;
         } else {
-            std::cout << R"(Only "y" or "n" allowed.)" << std::endl;
+            std::cout << CHOICE_ERROR << std::endl;
         }
     }
 }
 
-void check_equations(int **coefficients, char* signs, int variables_count, int equations_count) {
+void check_equations(int **coefficients, char *signs, int variables_count, int equations_count) {
     for (int i = 0; i < equations_count; ++i) {
         if (coefficients[i][variables_count - 1] < 0) {
             for (int j = 0; j < variables_count; ++j) {
@@ -126,7 +132,7 @@ void check_equations(int **coefficients, char* signs, int variables_count, int e
     }
 }
 
-void print_left_part(int* coefficients, int variables_count) {
+void print_left_part(int *coefficients, int variables_count) {
     for (int i = 0; i < variables_count; ++i) {
         if (i == 0 || coefficients[i] < 0) {
             if (coefficients[i] == -1) {
@@ -146,7 +152,8 @@ void print_left_part(int* coefficients, int variables_count) {
     }
 }
 
-void print_enter(int **coefficients, const char* signs, int *objective_function, int variables_count, int equations_count, bool is_maximize) {
+void print_enter(int **coefficients, const char *signs, int *objective_function,
+                 int variables_count, int equations_count, bool is_maximize) {
     std::cout << "Entered:" << std::endl;
     for (int i = 0; i < equations_count; ++i) {
         print_left_part(coefficients[i], variables_count - 1);
